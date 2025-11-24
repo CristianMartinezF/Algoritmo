@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Escenario 7 - Algoritmo Voraz por ROI</title>
+
+  <!-- Fuente bonita (opcional) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a, #1e293b, #0f766e);
+      --card-bg: rgba(15, 23, 42, 0.85);
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.2);
+      --danger-soft: rgba(248, 113, 113, 0.15);
+      --text-main: #e5e7eb;
+      --text-soft: #9ca3af;
+      --border-soft: rgba(148, 163, 184, 0.3);
+      --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.7);
+      --radius-lg: 18px;
+      --transition-fast: 0.2s ease-out;
+      --transition-med: 0.35s ease-out;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 1150px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      animation: fadeInPage 0.9s ease-out;
+    }
+
+    @keyframes fadeInPage {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-soft);
+      box-shadow: var(--shadow-soft);
+      padding: 18px 20px;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      animation: popIn 0.5s ease-out;
+    }
+
+    @keyframes popIn {
+      from {
+        opacity: 0;
+        transform: scale(0.98) translateY(4px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: radial-gradient(circle at 20% 20%, #22c55e, #0f766e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: #f9fafb;
+      font-size: 18px;
+      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo-text span:first-child {
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .logo-text span:last-child {
+      font-size: 12px;
+      color: var(--text-soft);
+    }
+
+    .pill {
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.18);
+      color: var(--text-soft);
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--text-soft);
+    }
+
+    /* Configuración */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    .controls label {
+      font-size: 13px;
+      color: var(--text-soft);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border-soft);
+    }
+
+    .controls input[type="number"] {
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-size: 13px;
+      outline: none;
+      width: 120px;
+    }
+
+    .btn {
+      border-radius: 999px;
+      padding: 7px 14px;
+      border: none;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast), color var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #f9fafb;
+      box-shadow: 0 10px 18px rgba(22, 163, 74, 0.35);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px) scale(1.02);
+      box-shadow: 0 14px 25px rgba(22, 163, 74, 0.45);
+    }
+
+    .btn-soft {
+      background: rgba(148, 163, 184, 0.16);
+      color: var(--text-soft);
+    }
+
+    .btn-soft:hover {
+      background: rgba(148, 163, 184, 0.25);
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text-soft);
+      border: 1px solid var(--border-soft);
+    }
+
+    .btn-outline:hover {
+      border-color: #e5e7eb;
+      color: #e5e7eb;
+      transform: translateY(-1px);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    /* Layout interno */
+    .grid-main {
+      display: grid;
+      grid-template-columns: minmax(0, 2.3fr) minmax(0, 1.2fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 900px) {
+      .grid-main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .step-text {
+      font-size: 13px;
+      color: var(--text-soft);
+      margin-bottom: 8px;
+      min-height: 36px;
+    }
+
+    .step-highlight {
+      color: #e5e7eb;
+      font-weight: 500;
+    }
+
+    /* Tabla */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 6px;
+      font-size: 13px;
+    }
+
+    thead {
+      background: rgba(15, 23, 42, 0.95);
+    }
+
+    th, td {
+      padding: 7px 8px;
+      text-align: center;
+      border-bottom: 1px solid rgba(55, 65, 81, 0.6);
+    }
+
+    th {
+      font-weight: 500;
+      color: #cbd5f5;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    tbody tr {
+      transition: background-color var(--transition-med), transform var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    tbody tr:nth-child(even) {
+      background: rgba(15, 23, 42, 0.5);
+    }
+
+    tbody tr:nth-child(odd) {
+      background: rgba(15, 23, 42, 0.75);
+    }
+
+    tbody tr:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 16px rgba(15, 23, 42, 0.6);
+    }
+
+    .current-row {
+      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.7);
+      position: relative;
+      animation: pulseCurrent 1s infinite alternate;
+    }
+
+    @keyframes pulseCurrent {
+      from { box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.7); }
+      to   { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25); }
+    }
+
+    .selected-row {
+      background: radial-gradient(circle at 0% 0%, rgba(34, 197, 94, 0.35), rgba(15, 23, 42, 0.9));
+      animation: slideSelected 0.35s ease-out;
+      transform: translateY(-1px);
+    }
+
+    @keyframes slideSelected {
+      from {
+        transform: translateX(-6px);
+        opacity: 0.4;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .skipped-row {
+      background: radial-gradient(circle at 0% 0%, rgba(248, 113, 113, 0.2), rgba(15, 23, 42, 0.9));
+      animation: slideSkipped 0.35s ease-out;
+    }
+
+    @keyframes slideSkipped {
+      from {
+        transform: translateX(6px);
+        opacity: 0.4;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .estado {
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .estado::before {
+      content: "● ";
+      font-size: 10px;
+    }
+
+    .estado-seleccionada {
+      color: #bbf7d0;
+    }
+
+    .estado-no-seleccionada {
+      color: #fecaca;
+    }
+
+    .estado-pendiente {
+      color: #e5e7eb;
+    }
+
+    /* Panel métricas */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 600px) {
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .metric-item {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--border-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    .metric-value {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .metric-tag {
+      font-size: 11px;
+      color: #a5b4fc;
+    }
+
+    /* Barra de progreso */
+    .progress-wrapper {
+      margin-top: 8px;
+    }
+
+    .progress-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 11px;
+      color: var(--text-soft);
+      margin-bottom: 4px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 9px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #22c55e, #a3e635);
+      box-shadow: 0 0 18px rgba(22, 163, 74, 0.6);
+      transition: width 0.45s cubic-bezier(0.14, 0.78, 0.36, 1);
+    }
+
+    /* Timeline de decisiones */
+    .timeline {
+      max-height: 180px;
+      overflow-y: auto;
+      padding-right: 4px;
+      margin-top: 6px;
+    }
+
+    .timeline-item {
+      font-size: 12px;
+      padding: 6px 8px;
+      border-radius: 10px;
+      margin-bottom: 5px;
+      border: 1px solid rgba(55, 65, 81, 0.8);
+      background: rgba(15, 23, 42, 0.95);
+      animation: fadeInTimeline 0.3s ease-out;
+    }
+
+    @keyframes fadeInTimeline {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .timeline-item span {
+      font-weight: 500;
+    }
+
+    .timeline-item.ok {
+      border-color: rgba(34, 197, 94, 0.7);
+      background: var(--accent-soft);
+      color: #bbf7d0;
+    }
+
+    .timeline-item.fail {
+      border-color: rgba(248, 113, 113, 0.7);
+      background: var(--danger-soft);
+      color: #fecaca;
+    }
+
+    .small {
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- CABECERA -->
+    <div class="card">
+      <div class="header-top">
+        <div class="logo">
+          <div class="logo-mark">C</div>
+          <div class="logo-text">
+            <span>CECAR · Escenario 7</span>
+            <span>Selección de campañas digitales con algoritmo voraz (ROI)</span>
+          </div>
+        </div>
+        <div class="pill">
+          Proyecto final · Estructura de Datos y Análisis de Algoritmos
+        </div>
+      </div>
+      <p class="subtitle" style="margin-top: 8px;">
+        Simulador animado que muestra, paso a paso, cómo el algoritmo voraz selecciona las campañas con mejor retorno sobre la inversión (ROI) sin superar el presupuesto.
+      </p>
+    </div>
+
+    <!-- CONFIGURACIÓN -->
+    <div class="card">
+      <h2 style="font-size: 16px; margin-bottom: 4px;">Configuración del escenario</h2>
+      <p class="small">Define el presupuesto de mercadeo y ejecuta el algoritmo. Luego puedes avanzar decisión por decisión o ver el resultado final.</p>
+
+      <div class="controls">
+        <label>
+          Presupuesto total (COP):
+          <input id="budgetInput" type="number" value="10000000" min="0" step="500000" />
+        </label>
+        <button class="btn btn-primary" id="startBtn">Iniciar simulación</button>
+        <button class="btn btn-soft" id="nextBtn" disabled>➡ Siguiente decisión</button>
+        <button class="btn btn-soft" id="finalBtn" disabled>⏭ Resultado final</button>
+        <button class="btn btn-outline" id="resetBtn">Reiniciar</button>
+      </div>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="grid-main">
+      <!-- Tabla + pasos -->
+      <div class="card">
+        <h2 style="font-size: 16px; margin-bottom: 4px;">Campañas y pasos del algoritmo</h2>
+        <p id="stepText" class="step-text">
+          Pulsa <span class="step-highlight">"Iniciar simulación"</span> para ordenar las campañas por ROI (de mayor a menor).
+        </p>
+
+        <div style="max-height: 300px; overflow-y: auto; border-radius: 14px; margin-top: 6px;">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Campaña</th>
+                <th>Costo</th>
+                <th>Retorno</th>
+                <th>ROI</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="campaignTableBody">
+              <!-- Se llena desde JavaScript -->
+            </tbody>
+          </table>
+        </div>
+
+        <p class="small" style="margin-top: 6px;">
+          Verde = seleccionada · Rojo = descartada · Azul = campaña actualmente evaluada.
+        </p>
+      </div>
+
+      <!-- Métricas + timeline -->
+      <div class="card">
+        <h2 style="font-size: 16px; margin-bottom: 4px;">Resumen en tiempo real</h2>
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <span class="metric-label">Presupuesto inicial</span>
+            <span class="metric-value" id="initialBudget">$ 0</span>
+            <span class="metric-tag">Valor total disponible</span>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">Presupuesto restante</span>
+            <span class="metric-value" id="remainingBudget">$ 0</span>
+            <span class="metric-tag">Lo que aún se puede invertir</span>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">Costo acumulado</span>
+            <span class="metric-value" id="totalCost">$ 0</span>
+            <span class="metric-tag">Suma de campañas seleccionadas</span>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">Retorno acumulado esperado</span>
+            <span class="metric-value" id="totalReturn">$ 0</span>
+            <span class="metric-tag">Beneficio estimado de la selección</span>
+          </div>
+        </div>
+
+        <div class="progress-wrapper">
+          <div class="progress-label-row">
+            <span>Uso del presupuesto</span>
+            <span id="progressPercent">0%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+        </div>
+
+        <h3 style="font-size: 14px; margin-top: 10px; margin-bottom: 4px;">Timeline de decisiones</h3>
+        <div class="timeline" id="timeline">
+          <!-- Mensajes de decisiones se agregan aquí -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Datos base de las campañas (puedes cambiarlos si quieres) ---
+    const campaignsBase = [
+      { nombre: "Instagram Pregrados", costo: 3000000, retorno: 9000000 },
+      { nombre: "Facebook Historias", costo: 2000000, retorno: 5200000 },
+      { nombre: "Google Ads Búsqueda", costo: 4000000, retorno: 11000000 },
+      { nombre: "TikTok Carrusel", costo: 2500000, retorno: 6000000 },
+      { nombre: "Email Marketing", costo: 1500000, retorno: 3300000 },
+      { nombre: "Landing Page SEO", costo: 1000000, retorno: 2500000 }
+    ];
+
+    let campaignsSorted = [];
+    let currentIndex = 0;
+    let presupuestoInicial = 0;
+    let presupuestoRestante = 0;
+    let costoAcumulado = 0;
+    let retornoAcumulado = 0;
+
+    const tbody = document.getElementById("campaignTableBody");
+    const stepText = document.getElementById("stepText");
+
+    const initialBudgetSpan = document.getElementById("initialBudget");
+    const remainingBudgetSpan = document.getElementById("remainingBudget");
+    const totalCostSpan = document.getElementById("totalCost");
+    const totalReturnSpan = document.getElementById("totalReturn");
+
+    const progressFill = document.getElementById("progressFill");
+    const progressPercent = document.getElementById("progressPercent");
+
+    const timeline = document.getElementById("timeline");
+
+    const startBtn = document.getElementById("startBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const finalBtn = document.getElementById("finalBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    function calcularROI(campaña) {
+      return (campaña.retorno - campaña.costo) / campaña.costo;
+    }
+
+    function formatearNumero(n) {
+      return n.toLocaleString("es-CO");
+    }
+
+    function limpiarTabla() {
+      tbody.innerHTML = "";
+    }
+
+    function renderTabla() {
+      limpiarTabla();
+      campaignsSorted.forEach((c, index) => {
+        const tr = document.createElement("tr");
+        tr.dataset.index = index;
+
+        const tdIndex = document.createElement("td");
+        tdIndex.textContent = index + 1;
+
+        const tdNombre = document.createElement("td");
+        tdNombre.textContent = c.nombre;
+
+        const tdCosto = document.createElement("td");
+        tdCosto.textContent = "$ " + formatearNumero(c.costo);
+
+        const tdRetorno = document.createElement("td");
+        tdRetorno.textContent = "$ " + formatearNumero(c.retorno);
+
+        const tdROI = document.createElement("td");
+        tdROI.textContent = c.roi.toFixed(2);
+
+        const tdEstado = document.createElement("td");
+        tdEstado.textContent = c.estado || "Pendiente";
+        tdEstado.classList.add("estado", "estado-pendiente");
+
+        tr.appendChild(tdIndex);
+        tr.appendChild(tdNombre);
+        tr.appendChild(tdCosto);
+        tr.appendChild(tdRetorno);
+        tr.appendChild(tdROI);
+        tr.appendChild(tdEstado);
+
+        tbody.appendChild(tr);
+      });
+
+      marcarFilaActual();
+    }
+
+    function actualizarMetricas() {
+      initialBudgetSpan.textContent = "$ " + formatearNumero(presupuestoInicial);
+      remainingBudgetSpan.textContent = "$ " + formatearNumero(presupuestoRestante);
+      totalCostSpan.textContent = "$ " + formatearNumero(costoAcumulado);
+      totalReturnSpan.textContent = "$ " + formatearNumero(retornoAcumulado);
+
+      let porcentaje = 0;
+      if (presupuestoInicial > 0) {
+        porcentaje = (costoAcumulado / presupuestoInicial) * 100;
+      }
+      progressFill.style.width = porcentaje.toFixed(1) + "%";
+      progressPercent.textContent = porcentaje.toFixed(1) + "%";
+    }
+
+    function limpiarClasesFilas() {
+      Array.from(tbody.rows).forEach(row => {
+        row.classList.remove("current-row", "selected-row", "skipped-row");
+      });
+    }
+
+    function marcarFilaActual() {
+      limpiarClasesFilas();
+      if (currentIndex < campaignsSorted.length) {
+        const fila = tbody.querySelector(`tr[data-index="${currentIndex}"]`);
+        if (fila) {
+          fila.classList.add("current-row");
+          fila.scrollIntoView({ block: "center", behavior: "smooth" });
+        }
+      }
+    }
+
+    function actualizarEstadoFila(index, estado, tipo) {
+      const fila = tbody.querySelector(`tr[data-index="${index}"]`);
+      if (!fila) return;
+      const celdaEstado = fila.querySelector(".estado");
+
+      celdaEstado.textContent = estado;
+
+      celdaEstado.classList.remove("estado-pendiente", "estado-seleccionada", "estado-no-seleccionada");
+      if (tipo === "ok") {
+        celdaEstado.classList.add("estado-seleccionada");
+        fila.classList.add("selected-row");
+      } else if (tipo === "fail") {
+        celdaEstado.classList.add("estado-no-seleccionada");
+        fila.classList.add("skipped-row");
+      }
+    }
+
+    function agregarTimelineItem(texto, tipo) {
+      const div = document.createElement("div");
+      div.classList.add("timeline-item");
+      if (tipo === "ok") div.classList.add("ok");
+      if (tipo === "fail") div.classList.add("fail");
+      div.textContent = texto;
+      timeline.appendChild(div);
+      timeline.scrollTop = timeline.scrollHeight;
+    }
+
+    // --- BOTONES ---
+    startBtn.addEventListener("click", () => {
+      const inputPresupuesto = document.getElementById("budgetInput").value;
+      const presupuestoIngresado = parseInt(inputPresupuesto);
+
+      if (isNaN(presupuestoIngresado) || presupuestoIngresado <= 0) {
+        alert("Por favor ingresa un presupuesto válido mayor que cero.");
+        return;
+      }
+
+      presupuestoInicial = presupuestoIngresado;
+      presupuestoRestante = presupuestoInicial;
+      costoAcumulado = 0;
+      retornoAcumulado = 0;
+      currentIndex = 0;
+      timeline.innerHTML = "";
+
+      campaignsSorted = campaignsBase.map(c => ({
+        ...c,
+        roi: calcularROI(c),
+        estado: "Pendiente"
+      }));
+
+      // Ordenar de mayor a menor ROI
+      campaignsSorted.sort((a, b) => b.roi - a.roi);
+
+      renderTabla();
+      actualizarMetricas();
+
+      stepText.innerHTML =
+        'Las campañas han sido ordenadas por ROI (de mayor a menor). Pulsa <span class="step-highlight">"Siguiente decisión"</span> para que el algoritmo empiece a seleccionar.';
+
+      agregarTimelineItem("Simulación iniciada. Campañas ordenadas por ROI de mayor a menor.", "neutral");
+
+      nextBtn.disabled = false;
+      finalBtn.disabled = false;
+    });
+
+    nextBtn.addEventListener("click", () => {
+      if (currentIndex >= campaignsSorted.length) {
+        stepText.innerHTML = "Ya se han tomado todas las decisiones posibles. Puedes revisar el resultado final.";
+        nextBtn.disabled = true;
+        agregarTimelineItem("No quedan campañas por evaluar.", "neutral");
+        return;
+      }
+
+      const camp = campaignsSorted[currentIndex];
+
+      if (camp.costo <= presupuestoRestante) {
+        // Se selecciona
+        presupuestoRestante -= camp.costo;
+        costoAcumulado += camp.costo;
+        retornoAcumulado += camp.retorno;
+        camp.estado = "Seleccionada";
+        actualizarEstadoFila(currentIndex, "Seleccionada", "ok");
+
+        stepText.innerHTML =
+          `Se selecciona <span class="step-highlight">"${camp.nombre}"</span> porque su ROI = <span class="step-highlight">${camp.roi.toFixed(
+            2
+          )}</span> y su costo de <span class="step-highlight">$${formatearNumero(
+            camp.costo
+          )}</span> cabe en el presupuesto restante.`;
+
+        agregarTimelineItem(
+          `✔ Seleccionada "${camp.nombre}" · Costo $${formatearNumero(camp.costo)} · ROI ${camp.roi.toFixed(2)}`,
+          "ok"
+        );
+      } else {
+        // Se omite
+        camp.estado = "No seleccionada";
+        actualizarEstadoFila(currentIndex, "No seleccionada", "fail");
+
+        stepText.innerHTML =
+          `Se omite <span class="step-highlight">"${camp.nombre}"</span> porque su costo de <span class="step-highlight">$${formatearNumero(
+            camp.costo
+          )}</span> excede el presupuesto restante de <span class="step-highlight">$${formatearNumero(
+            presupuestoRestante
+          )}</span>.`;
+
+        agregarTimelineItem(
+          `✖ Omitida "${camp.nombre}" · Costo $${formatearNumero(camp.costo)} supera presupuesto restante.`,
+          "fail"
+        );
+      }
+
+      currentIndex++;
+      actualizarMetricas();
+      marcarFilaActual();
+
+      if (currentIndex >= campaignsSorted.length) {
+        nextBtn.disabled = true;
+        stepText.innerHTML +=
+          " <br><span class=\"step-highlight\">El algoritmo ha terminado de procesar todas las campañas.</span>";
+        agregarTimelineItem("El algoritmo ha terminado de procesar todas las campañas.", "neutral");
+      }
+    });
+
+    finalBtn.addEventListener("click", () => {
+      const costoTotal = costoAcumulado;
+      const retornoTotal = retornoAcumulado;
+      const roiGlobal = costoTotal > 0 ? (retornoTotal - costoTotal) / costoTotal : 0;
+
+      stepText.innerHTML =
+        `Resultado final: se seleccionaron las campañas con mejor ROI hasta agotar (o acercarse al límite de) presupuesto.` +
+        `<br>Costo total invertido: <span class="step-highlight">$${formatearNumero(costoTotal)}</span>, ` +
+        `retorno esperado: <span class="step-highlight">$${formatearNumero(retornoTotal)}</span>, ` +
+        `ROI global aproximado: <span class="step-highlight">${roiGlobal.toFixed(2)}</span>.`;
+
+      agregarTimelineItem(
+        `Resumen: costo total $${formatearNumero(costoTotal)}, retorno esperado $${formatearNumero(
+          retornoTotal
+        )}, ROI global ≈ ${roiGlobal.toFixed(2)}.`,
+        "neutral"
+      );
+    });
+
+    resetBtn.addEventListener("click", () => {
+      campaignsSorted = [];
+      currentIndex = 0;
+      presupuestoInicial = 0;
+      presupuestoRestante = 0;
+      costoAcumulado = 0;
+      retornoAcumulado = 0;
+      limpiarTabla();
+      actualizarMetricas();
+      timeline.innerHTML = "";
+      stepText.innerHTML =
+        'Pulsa <span class="step-highlight">"Iniciar simulación"</span> para comenzar de nuevo.';
+      nextBtn.disabled = true;
+      finalBtn.disabled = true;
+    });
+  </script>
+</body>
+</html>
